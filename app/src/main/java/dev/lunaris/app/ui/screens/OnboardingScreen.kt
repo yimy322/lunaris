@@ -1,7 +1,5 @@
 package dev.lunaris.app.ui.screens
 
-import android.widget.Space
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,9 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -31,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import dev.lunaris.app.R
+import dev.lunaris.app.ui.components.CustomButton
 import dev.lunaris.app.ui.navigation.Screen
 
 @Composable
@@ -79,17 +75,10 @@ fun OnboardingScreen(navController: NavController){
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
             //button de comenzar
-            Button(
-                onClick = { navController.navigate(Screen.Login.route) },
-                modifier = Modifier.fillMaxWidth().height(60.dp),
-                shape = RoundedCornerShape(0),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF67B99A),
-                    contentColor = Color.White
-                )
-            ) {
-                Text(text = "Comenzar", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-            }
+            CustomButton(
+                text = "Comenzar",
+                onClick = { navController.navigate(Screen.Login.route) }
+            )
             Spacer(modifier = Modifier.height(40.dp))
         }
     }

@@ -5,8 +5,10 @@ import androidx.navigation.NavHost
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import dev.lunaris.app.ui.screens.BoardScreen
 import dev.lunaris.app.ui.screens.LoginScreen
 import dev.lunaris.app.ui.screens.OnboardingScreen
+import dev.lunaris.app.ui.screens.RegisterScreen
 
 @Composable
 fun LunarisNavGraph(navController: NavHostController){
@@ -20,8 +22,11 @@ fun LunarisNavGraph(navController: NavHostController){
         composable(Screen.Login.route) {
             LoginScreen(navController)
         }
-//        composable(Screen.Board.route) {
-//            BoardScreen(navController)
-//        }
+        composable(Screen.Register.route) {
+            RegisterScreen(navController)
+        }
+        composable(Screen.Board.route) {
+            BoardScreen(navController)
+        }
     }
 }
