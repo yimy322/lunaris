@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import dev.lunaris.app.ui.components.CreateProjectDialog
 import dev.lunaris.app.ui.components.CustomProjectCard
+import dev.lunaris.app.ui.navigation.Screen
 import dev.lunaris.app.ui.theme.ColorPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -110,7 +111,10 @@ fun ProjectScreen(navController: NavController){
                         title = project.first,
                         date = project.second,
                         description = "Mi proyecto",
-                        barColor = project.third
+                        barColor = project.third,
+                        onClick = {
+                            navController.navigate(Screen.ProjectDetail.route)
+                        }
                     )
                 }
             }

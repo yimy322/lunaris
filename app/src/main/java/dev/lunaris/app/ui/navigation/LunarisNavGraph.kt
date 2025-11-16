@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import dev.lunaris.app.ui.screens.BoardScreen
 import dev.lunaris.app.ui.screens.LoginScreen
 import dev.lunaris.app.ui.screens.OnboardingScreen
+import dev.lunaris.app.ui.screens.ProjectDetailScreen
 import dev.lunaris.app.ui.screens.ProjectScreen
 import dev.lunaris.app.ui.screens.RegisterScreen
 
@@ -31,6 +32,9 @@ fun LunarisNavGraph(navController: NavHostController){
         }
         composable(Screen.Project.route) {
             ProjectScreen(navController)
+        }
+        composable(Screen.ProjectDetail.route) {
+            ProjectDetailScreen(navController)
         }
     }
 }

@@ -109,19 +109,28 @@ fun BoardScreen(navController: NavController){
                     title = "Proyecto 1",
                     date = "NOV 02, 2025",
                     description = "Mi primer proyecto",
-                    barColor = Color(0xFF8FC5FF)
+                    barColor = Color(0xFF8FC5FF),
+                    onClick = {
+                        navController.navigate(Screen.ProjectDetail.route)
+                    }
                 )
                 CustomProjectCard(
                     title = "Proyecto 2",
                     date = "NOV 02, 2025",
                     description = "Mi segundo proyecto",
-                    barColor = Color(0xFFE3B5FF)
+                    barColor = Color(0xFFE3B5FF),
+                    onClick = {
+                        navController.navigate(Screen.ProjectDetail.route)
+                    }
                 )
                 CustomProjectCard(
                     title = "Proyecto 3",
                     date = "NOV 02, 2025",
                     description = "Mi tercer proyecto",
-                    barColor = Color(0xFF74D788)
+                    barColor = Color(0xFF74D788),
+                    onClick = {
+                        navController.navigate(Screen.ProjectDetail.route)
+                    }
                 )
                 Button(
                     onClick = { navController.navigate(Screen.Project.route) },
