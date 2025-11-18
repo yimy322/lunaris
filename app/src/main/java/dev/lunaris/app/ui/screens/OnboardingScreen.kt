@@ -77,6 +77,7 @@ fun OnboardingScreen(navController: NavController){
             //button de comenzar
             CustomButton(
                 text = "Comenzar",
+                enableButton = true,
                 onClick = { navController.navigate(Screen.Login.route) }
             )
             Spacer(modifier = Modifier.height(40.dp))

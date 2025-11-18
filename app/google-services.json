@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "407788703428",
+    "project_id": "lunaris-app-3ad67",
+    "storage_bucket": "lunaris-app-3ad67.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:407788703428:android:fa99dcc289d2d47bae0391",
+        "android_client_info": {
+          "package_name": "dev.lunaris.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3oizXRhDsHiIxTLiKstafbwPcdwbnkFM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

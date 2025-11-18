@@ -1,5 +1,6 @@
 package dev.lunaris.app.ui.components
 
+import android.R
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,6 +17,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun CustomButton(
     text: String,
+    enableButton: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     containerColor: Color = Color(0xFF67B99A),
@@ -25,6 +27,7 @@ fun CustomButton(
 ) {
     Button(
         onClick = onClick,
+        enabled = enableButton,
         modifier = modifier
             .fillMaxWidth()
             .height(60.dp),

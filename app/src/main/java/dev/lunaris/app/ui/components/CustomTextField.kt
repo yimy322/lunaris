@@ -20,13 +20,13 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun CustomTextField(
     label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
     isPassword: Boolean = false
 ) {
-    var value by remember { mutableStateOf("") }
-
     OutlinedTextField(
         value = value,
-        onValueChange = { value = it },
+        onValueChange = onValueChange,
         placeholder = { Text(label, color = Color.Gray) },
         modifier = Modifier
             .fillMaxWidth()

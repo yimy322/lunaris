@@ -12,6 +12,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,13 +23,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import dev.lunaris.app.ui.components.CustomButton
 import dev.lunaris.app.ui.components.CustomTextField
 import dev.lunaris.app.ui.navigation.Screen
+import dev.lunaris.app.ui.screens.auth.AuthViewModel
 
 @Composable
-fun RegisterScreen(navController: NavController){
+fun RegisterScreen(navController: NavController, vm: AuthViewModel = viewModel()){
+    //variables para el registro
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirm by remember { mutableStateOf("") }
+
+    val isLoading = vm.isLoading
+    val errorMessage = vm.errorMessage
+
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         Column(
             modifier = Modifier
@@ -51,17 +66,45 @@ fun RegisterScreen(navController: NavController){
                 color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(42.dp))
-            CustomTextField("Nombre completo")
-            CustomTextField("Correo")
-            CustomTextField("Contraseña", isPassword = true)
-            CustomTextField("Confirmar contraseña", isPassword = true)
+            CustomTextField("Nombre completo", value = name, onValueChange = { name = it })
+            CustomTextField("Correo", value = email, onValueChange = { email = it })
+            CustomTextField("Contraseña", value = password, onValueChange = { password = it } , isPassword = true)
+            CustomTextField("Confirmar contraseña", value = confirm, onValueChange = { confirm = it }, isPassword = true)
+
             Spacer(modifier = Modifier.height(42.dp))
             //button de registrarse
             CustomButton(
-                text = "Registrarse",
-                onClick = { navController.navigate(Screen.Login.route) }
+                text = if (isLoading) "Creando..." else "Registrarse",
+                enableButton = !isLoading,
+                onClick = {
+                    //validacion de nulos
+                    if (name.isBlank() || email.isBlank() || password.isBlank() || confirm.isBlank()) {
+                        vm.errorMessage = "Todos los campos son obligatorios"
+                        return@CustomButton
+                    }
+                    //para que las contrasenas coincidan
+                    if (password != confirm) {
+                        vm.errorMessage = "Las contraseñas no coinciden"
+                        return@CustomButton
+                    }
+                    vm.register(name, email, password) { success ->
+                        //retorna del register
+                        if (success) {
+                            //OK
+                            navController.navigate(Screen.Login.route) {
+                                //elimina el historial de navegacion
+                                //cuando das back no te lleva a esta pantalla
+                                popUpTo(0)
+                            }
+                        }
+                    }
+                }
             )
             Spacer(modifier = Modifier.height(16.dp))
+            //mensaje de error
+            errorMessage?.let {
+                Text(text = it, color = Color.Red, fontWeight = FontWeight.Bold)
+            }
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically

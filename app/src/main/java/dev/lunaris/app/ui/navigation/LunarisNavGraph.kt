@@ -11,6 +11,7 @@ import dev.lunaris.app.ui.screens.OnboardingScreen
 import dev.lunaris.app.ui.screens.ProjectDetailScreen
 import dev.lunaris.app.ui.screens.ProjectScreen
 import dev.lunaris.app.ui.screens.RegisterScreen
+import dev.lunaris.app.ui.screens.TaskScreen
 
 @Composable
 fun LunarisNavGraph(navController: NavHostController){
@@ -35,6 +36,9 @@ fun LunarisNavGraph(navController: NavHostController){
         }
         composable(Screen.ProjectDetail.route) {
             ProjectDetailScreen(navController)
+        }
+        composable(Screen.Task.route) {
+            TaskScreen(navController)
         }
     }
 }

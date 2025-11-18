@@ -1,6 +1,7 @@
 package dev.lunaris.app.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,19 +14,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,16 +41,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import dev.lunaris.app.ui.components.CustomProjectCard
 import dev.lunaris.app.ui.components.CustomTaskCard
 import dev.lunaris.app.ui.theme.ColorPrimary
 import dev.lunaris.app.R
 import dev.lunaris.app.ui.navigation.Screen
+import dev.lunaris.app.ui.screens.auth.AuthViewModel
+import dev.lunaris.app.ui.theme.DoneColor
 
 @Composable
-fun BoardScreen(navController: NavController){
-    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+fun BoardScreen(navController: NavController, vm: AuthViewModel = viewModel()){
+    //para el drop del usuario
+    var expanded by remember { mutableStateOf(false) }
+    Scaffold(
+        modifier = Modifier.fillMaxSize()
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -66,7 +79,45 @@ fun BoardScreen(navController: NavController){
                         modifier = Modifier
                             .size(32.dp)
                             .clip(CircleShape)
+                            .clickable { expanded = true }
                     )
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+
+                        DropdownMenuItem(
+                            text = { Text("Mi perfil") },
+                            onClick = {
+                                expanded = false
+                                // Navegar al perfil o abrir un dialog
+                            }
+                        )
+
+                        DropdownMenuItem(
+                            text = { Text("Ajustes") },
+                            onClick = {
+                                expanded = false
+                                // Ir a ajustes
+                            }
+                        )
+
+                        DropdownMenuItem(
+                            text = { Text("Cerrar sesión", color = Color.Red) },
+                            onClick = {
+                                expanded = false
+                                //cerramos sesion
+                                vm.signOut()
+                                //redireccionamos al login
+                                navController.navigate(Screen.Login.route) {
+                                    //elimina del backstack
+                                    //sino hacemos esto al dar back volvera a esta pantalla
+                                    //aunque no este logueado
+                                    popUpTo(Screen.Board.route) { inclusive = true }
+                                }
+                            }
+                        )
+                    }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Bienvenido, Yimy",
@@ -165,7 +216,10 @@ fun BoardScreen(navController: NavController){
                 Text(
                     text = "Ver más",
                     color = ColorPrimary,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.clickable {
+                        navController.navigate(Screen.Task.route)
+                    }
                 )
             }
             Spacer(Modifier.height(10.dp))
@@ -179,7 +233,11 @@ fun BoardScreen(navController: NavController){
                     CustomTaskCard(
                         title = "Tarea ${index + 1}",
                         description = "Esta es la tarea número ${index + 1}",
-                        date = "25 Feb, 2025"
+                        projectName = "Proyecto 1",
+                        listName = "En progreso",
+                        date = "25 Feb, 2025",
+                        DoneColor,
+                        Icons.Default.CheckCircle
                     )
                 }
             }
