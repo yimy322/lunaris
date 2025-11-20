@@ -1,6 +1,7 @@
 package dev.lunaris.app.viewmodel
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
@@ -10,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import dev.lunaris.app.data.model.Project
 import dev.lunaris.app.data.model.ProjectList
+import dev.lunaris.app.data.model.Task
 import dev.lunaris.app.data.repository.ProjectRepository
 import kotlinx.coroutines.launch
 
@@ -29,6 +31,8 @@ class ProjectViewModel(
     var selectedProject by mutableStateOf<Project?>(null)
         private set
     var projectLists: List<ProjectList> by mutableStateOf(emptyList())
+        private set
+    var tasksByList = mutableStateMapOf<String, List<Task>>()
         private set
     //aca concatena las 2 listas
     fun loadProjects() {
@@ -72,11 +76,68 @@ class ProjectViewModel(
             result.onSuccess {
                 selectedProject = it
                 projectLists = repo.getListsByProjectId(id)
+                //tareas
+                projectLists.forEach { list ->
+                    val tasks = repo.getTasksByListId(list.id)
+                    tasksByList[list.id] = tasks
+                }
             }.onFailure { e ->
                 errorMessage = e.message
             }
         }
     }
+    //crear lista
+    fun createList(projectId: String, title: String) {
+        viewModelScope.launch {
+            isLoading = true
+            //mapeamos al objeto
+            val list = ProjectList(
+                id = "",
+                projectId = projectId,
+                title = title
+            )
+            //guardamos
+            val result = repo.createList(list)
+            isLoading = false
+            //seteamos mensajes
+            if (result.isSuccess) {
+                successMessage = "Lista creada correctamente"
+                projectLists = repo.getListsByProjectId(projectId)//para refrescar las listas
+            } else {
+                errorMessage = result.exceptionOrNull()?.localizedMessage
+            }
+        }
+    }
+    //crear tarea
+    fun createTask(
+        listId: String,
+        title: String,
+        description: String,
+        deadline: Long?
+    ) {
+        viewModelScope.launch {
+            val user = auth.currentUser ?: return@launch
+            val task = Task(
+                listId = listId,
+                title = title,
+                description = description,
+                deadline = deadline,
+                isDone = false,
+                createdAt = System.currentTimeMillis()
+            )
+
+            val result = repo.createTask(task)
+            result.onSuccess {
+                successMessage = "Tarea creada"
+                //volvemos a cargar las tareas
+                val tasks = repo.getTasksByListId(listId)
+                tasksByList[listId] = tasks
+            }.onFailure { e ->
+                errorMessage = e.message
+            }
+        }
+    }
+
     //limpiamos mensajes
     fun clearMessages() {
         successMessage = null

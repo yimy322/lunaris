@@ -10,5 +10,4 @@ sealed class Screen(val route: String){
     object ProjectDetail : Screen("projectDetail/{projectId}") {
         fun createRoute(projectId: String) = "projectDetail/$projectId"
     }
-    object Task : Screen("task")
 }

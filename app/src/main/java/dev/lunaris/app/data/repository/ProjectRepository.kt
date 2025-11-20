@@ -3,6 +3,7 @@ package dev.lunaris.app.data.repository
 import com.google.firebase.firestore.FirebaseFirestore
 import dev.lunaris.app.data.model.Project
 import dev.lunaris.app.data.model.ProjectList
+import dev.lunaris.app.data.model.Task
 import kotlinx.coroutines.tasks.await
 
 class ProjectRepository {
@@ -11,6 +12,7 @@ class ProjectRepository {
     private val projectsRef = db.collection("projects")
     //para las listas
     private val listsRef = FirebaseFirestore.getInstance().collection("projectLists")
+    private val tasksRef = FirebaseFirestore.getInstance().collection("tasks")
     //crea un proyecto, suspende y espera a que termine
     suspend fun createProject(project: Project): Result<String> {
         return try {
@@ -124,5 +126,22 @@ class ProjectRepository {
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+    //para crear la tarea
+    suspend fun createTask(task: Task): Result<String> {
+        return try {
+            val doc = tasksRef.document()
+            val newId = doc.id
+            val newTask = task.copy(id = newId)
+            doc.set(newTask).await()
+            Result.success(newId)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    // Obtener tareas por listId
+    suspend fun getTasksByListId(listId: String): List<Task> {
+        val snapshot = tasksRef.whereEqualTo("listId", listId).get().await()
+        return snapshot.toObjects(Task::class.java)
     }
 }

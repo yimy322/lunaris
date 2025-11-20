@@ -68,9 +68,11 @@ fun CustomTaskCard(
             Spacer(modifier = Modifier.height(4.dp))
             Text(description, fontSize = 12.sp, color = Color.Gray)
 
+            //nombre de la lista
             Spacer(modifier = Modifier.height(2.dp))
             Text(listName, fontSize = 12.sp, color = iconColor, fontWeight = FontWeight.SemiBold)
 
+            //fecha limite
             Spacer(modifier = Modifier.height(8.dp))
             Text(date, fontSize = 12.sp, color = Color.Gray)
 
@@ -82,6 +84,7 @@ fun CustomTaskCard(
                     .padding(vertical = 2.dp, horizontal = 12.dp)
             ) {
                 Text(
+                    //nombre del proyecto
                     text = projectName,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,

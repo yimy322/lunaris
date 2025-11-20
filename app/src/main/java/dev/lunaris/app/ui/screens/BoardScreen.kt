@@ -27,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,6 +52,7 @@ import dev.lunaris.app.ui.components.CustomTaskCard
 import dev.lunaris.app.ui.theme.ColorPrimary
 import dev.lunaris.app.R
 import dev.lunaris.app.data.repository.ProjectRepository
+import dev.lunaris.app.ui.components.CreateProjectDialog
 import dev.lunaris.app.ui.navigation.Screen
 import dev.lunaris.app.ui.screens.auth.AuthViewModel
 import dev.lunaris.app.ui.theme.DoneColor
@@ -79,6 +81,8 @@ fun BoardScreen(navController: NavController){
     val firstName = name?.trim()?.split(" ")?.firstOrNull() ?: "Usuario"
     //para el drop del usuario
     var expanded by remember { mutableStateOf(false) }
+    //para el dialog de crear proyecto
+    var showDialog by remember { mutableStateOf(false) }
     Scaffold(
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
@@ -170,12 +174,22 @@ fun BoardScreen(navController: NavController){
                     fontWeight = FontWeight.Bold
                 )
 
-                Icon(
-                    imageVector = Icons.Default.AddCircle,
-                    contentDescription = "Agregar proyecto",
-                    tint = ColorPrimary,
-                    modifier = Modifier.size(26.dp)
-                )
+                TextButton(
+                    onClick = { showDialog = true }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AddCircle,
+                        contentDescription = "crear proyecto",
+                        tint = ColorPrimary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Crear",
+                        color = ColorPrimary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
             Spacer(Modifier.height(10.dp))
             //proyectos
@@ -219,45 +233,16 @@ fun BoardScreen(navController: NavController){
                     )
                 }
             }
-            Spacer(Modifier.height(20.dp))
-            //tareas
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Tus tareas",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "Ver más",
-                    color = ColorPrimary,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.clickable {
-                        navController.navigate(Screen.Task.route)
-                    }
-                )
-            }
-            Spacer(Modifier.height(10.dp))
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(4) { index ->
-                    CustomTaskCard(
-                        title = "Tarea ${index + 1}",
-                        description = "Esta es la tarea número ${index + 1}",
-                        projectName = "Proyecto 1",
-                        listName = "En progreso",
-                        date = "25 Feb, 2025",
-                        DoneColor,
-                        Icons.Default.CheckCircle
-                    )
+        }
+        if (showDialog) {
+            CreateProjectDialog(
+                onDismiss = { showDialog = false },
+                onCreate = { title, description, color ->
+                    //guardamos
+                    projectVm.createProject(title, description, color)
+                    showDialog = false
                 }
-            }
+            )
         }
     }
 }
