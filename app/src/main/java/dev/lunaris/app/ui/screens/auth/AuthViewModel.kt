@@ -5,6 +5,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.userProfileChangeRequest
 
@@ -42,7 +46,7 @@ class AuthViewModel : ViewModel() {
                         }
                 } else {
                     isLoading = false
-                    errorMessage = task.exception?.localizedMessage ?: "Error desconocido"
+                    errorMessage = getAuthErrorMessage(task.exception)
                     onResult(false)
                 }
             }
@@ -58,7 +62,7 @@ class AuthViewModel : ViewModel() {
                     currentUser = auth.currentUser
                     onResult(true)
                 } else {
-                    errorMessage = task.exception?.localizedMessage ?: "Error desconocido"
+                    errorMessage = getAuthErrorMessage(task.exception)
                     onResult(false)
                 }
             }
@@ -71,5 +75,23 @@ class AuthViewModel : ViewModel() {
     //refrescar usuario
     fun refreshUser() {
         currentUser = auth.currentUser
+    }
+    //para los errores
+    private fun getAuthErrorMessage(e: Exception?): String {
+        return when (e) {
+            is FirebaseAuthWeakPasswordException ->
+                "La contraseña debe tener al menos 6 caracteres."
+
+            is FirebaseAuthInvalidCredentialsException ->
+                "Correo o contraseña incorrectos."
+
+            is FirebaseAuthUserCollisionException ->
+                "Este correo ya está registrado."
+
+            is FirebaseAuthInvalidUserException ->
+                "No existe una cuenta con este correo."
+
+            else -> "Ocurrió un error inesperado. Inténtalo nuevamente."
+        }
     }
 }

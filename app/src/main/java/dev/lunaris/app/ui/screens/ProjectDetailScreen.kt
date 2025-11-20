@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -16,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,26 +27,42 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.toColorInt
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import dev.lunaris.app.data.repository.ProjectRepository
 import dev.lunaris.app.ui.components.CreateListDialog
 import dev.lunaris.app.ui.components.ProjectInfoSection
 import dev.lunaris.app.ui.components.ProjectListItem
+import dev.lunaris.app.utils.toFormattedDate
+import dev.lunaris.app.viewmodel.ProjectViewModel
+import dev.lunaris.app.viewmodel.ProjectViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProjectDetailScreen(navController: NavController){
-    //detalle del proyecto
-    val projectTitle = "Proyecto X"
-    val projectDescription = "Descripción del proyecto... Aquí puedes mostrar más datos."
-    val projectColor = Color(0xFF8FC5FF)
+fun ProjectDetailScreen(navController: NavController, projectId: String){
+    val repo = ProjectRepository()
+    val factory = ProjectViewModelFactory(repo)
+    val viewModel: ProjectViewModel = viewModel(factory = factory)
+
+    LaunchedEffect(projectId) {
+        viewModel.loadProjectById(projectId)
+    }
+
+    val project = viewModel.selectedProject
+
+    if (project == null) {
+        CircularProgressIndicator(modifier = Modifier.padding(16.dp))
+        return
+    }
     //listas del proyecto
-    var lists by remember { mutableStateOf(listOf("Lista 1", "Tareas importantes")) }
+    val lists = viewModel.projectLists
     //estado del dialog
     var showListDialog by remember { mutableStateOf(false) }
     Scaffold(modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text("Proyecto X") },
+                title = { Text(project.title) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -69,7 +87,11 @@ fun ProjectDetailScreen(navController: NavController){
                 .padding(16.dp)
         ) {
             //detalle del proyecto
-            ProjectInfoSection(projectTitle, projectDescription, projectColor)
+            ProjectInfoSection(
+                project.title,
+                project.description,
+                Color(project.colorHex.toColorInt()),
+                "Creado el: ${project.createdAt.toFormattedDate()}")
 
             Spacer(Modifier.height(24.dp))
 
@@ -81,19 +103,25 @@ fun ProjectDetailScreen(navController: NavController){
             )
 
             Spacer(Modifier.height(12.dp))
-
-            lists.forEach { listName ->
-                ProjectListItem(listName)
-                Spacer(Modifier.height(8.dp))
+            if (lists.isEmpty()) {
+                Text(
+                    text = "Este proyecto aún no tiene listas",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(top = 20.dp)
+                )
+            }else{
+                lists.forEach { item ->
+                    ProjectListItem(item.title)
+                    Spacer(Modifier.height(8.dp))
+                }
             }
-
             //dialogo
             if (showListDialog) {
                 CreateListDialog(
                     onDismiss = { showListDialog = false },
-                    onCreate = { listName ->
-                        if (listName.isNotBlank()) {
-                            lists = lists + listName   //agrega a la lista
+                    onCreate = { title ->
+                        if (title.isNotBlank()) {
+                            //viewModel.addListToProject(projectId, title)
                         }
                         showListDialog = false
                     }

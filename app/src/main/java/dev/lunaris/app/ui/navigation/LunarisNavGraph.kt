@@ -3,8 +3,10 @@ package dev.lunaris.app.ui.navigation
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHost
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import dev.lunaris.app.ui.screens.BoardScreen
 import dev.lunaris.app.ui.screens.LoginScreen
 import dev.lunaris.app.ui.screens.OnboardingScreen
@@ -34,8 +36,15 @@ fun LunarisNavGraph(navController: NavHostController){
         composable(Screen.Project.route) {
             ProjectScreen(navController)
         }
-        composable(Screen.ProjectDetail.route) {
-            ProjectDetailScreen(navController)
+        //este se tiene que pasa un parametro
+        composable(
+            route = Screen.ProjectDetail.route,
+            arguments = listOf(
+                navArgument("projectId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val projectId = backStackEntry.arguments?.getString("projectId")!!
+            ProjectDetailScreen(navController, projectId)
         }
         composable(Screen.Task.route) {
             TaskScreen(navController)

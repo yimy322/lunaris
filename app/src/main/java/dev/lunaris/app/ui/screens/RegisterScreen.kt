@@ -10,8 +10,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,7 +44,14 @@ fun RegisterScreen(navController: NavController, vm: AuthViewModel = viewModel()
     val isLoading = vm.isLoading
     val errorMessage = vm.errorMessage
 
-    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+    //para la alerta notificacion
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        //para que muestre la alerta
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -101,9 +111,14 @@ fun RegisterScreen(navController: NavController, vm: AuthViewModel = viewModel()
                 }
             )
             Spacer(modifier = Modifier.height(16.dp))
-            //mensaje de error
-            errorMessage?.let {
-                Text(text = it, color = Color.Red, fontWeight = FontWeight.Bold)
+            //mensaje de error en la alerta
+            vm.errorMessage?.let { message ->
+                LaunchedEffect(message) {
+                    snackbarHostState.showSnackbar(
+                        message = message,
+                        withDismissAction = true
+                    )
+                }
             }
             Row(
                 horizontalArrangement = Arrangement.Center,

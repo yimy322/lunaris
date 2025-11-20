@@ -17,7 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun ProjectInfoSection(title: String, description: String, color: Color) {
+fun ProjectInfoSection(title: String, description: String, color: Color, date: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -28,5 +28,7 @@ fun ProjectInfoSection(title: String, description: String, color: Color) {
         Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         Text(description, style = MaterialTheme.typography.bodyMedium)
+        Spacer(Modifier.height(8.dp))
+        Text(date, style = MaterialTheme.typography.bodyMedium)
     }
 }

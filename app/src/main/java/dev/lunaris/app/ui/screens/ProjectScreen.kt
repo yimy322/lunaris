@@ -1,5 +1,6 @@
 package dev.lunaris.app.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -18,10 +19,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,18 +37,51 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
+import dev.lunaris.app.data.repository.ProjectRepository
 import dev.lunaris.app.ui.components.CreateProjectDialog
 import dev.lunaris.app.ui.components.CustomProjectCard
 import dev.lunaris.app.ui.navigation.Screen
 import dev.lunaris.app.ui.theme.ColorPrimary
+import dev.lunaris.app.viewmodel.ProjectViewModel
+import dev.lunaris.app.viewmodel.ProjectViewModelFactory
+import androidx.core.graphics.toColorInt
+import dev.lunaris.app.utils.toFormattedDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProjectScreen(navController: NavController){
+
+    //crea la instancia del viewmodel
+    val vm: ProjectViewModel = viewModel(
+        factory = ProjectViewModelFactory(ProjectRepository())
+    )
+    //es como un init
+    LaunchedEffect(Unit) {
+        vm.loadProjects()
+    }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    //escuchamos los mensajes
+    LaunchedEffect(vm.successMessage, vm.errorMessage) {
+        vm.successMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            vm.clearMessages()
+        }
+        vm.errorMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            vm.clearMessages()
+        }
+    }
+
+    val projects = vm.projects
     //para el dialog de crear proyecto
     var showDialog by remember { mutableStateOf(false) }
     Scaffold(modifier = Modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -91,31 +128,30 @@ fun ProjectScreen(navController: NavController){
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            val projects = listOf(
-                Triple("Proyecto 1", "NOV 02, 2025", Color(0xFF8FC5FF)),
-                Triple("Proyecto 2", "NOV 02, 2025", Color(0xFFE3B5FF)),
-                Triple("Proyecto 3", "NOV 02, 2025", Color(0xFF74D788)),
-                Triple("Proyecto 4", "NOV 02, 2025", Color(0xFF8FC5FF)),
-                Triple("Proyecto 5", "NOV 02, 2025", Color(0xFFE3B5FF)),
-                Triple("Proyecto 6", "NOV 02, 2025", Color(0xFF74D788))
-            )
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-
-                items(projects) { project ->
-                    CustomProjectCard(
-                        title = project.first,
-                        date = project.second,
-                        description = "Mi proyecto",
-                        barColor = project.third,
-                        onClick = {
-                            navController.navigate(Screen.ProjectDetail.route)
-                        }
-                    )
+            val projects = vm.projects
+            if (projects.isEmpty()) {
+                Text(
+                    text = "Aún no tienes proyectos",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(top = 20.dp)
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(projects) { project ->
+                        CustomProjectCard(
+                            title = project.title,
+                            date = project.createdAt.toFormattedDate(),
+                            description = project.description,
+                            barColor = Color(project.colorHex.toColorInt()),
+                            onClick = {
+                                navController.navigate(Screen.ProjectDetail.createRoute(project.id))
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -123,7 +159,8 @@ fun ProjectScreen(navController: NavController){
             CreateProjectDialog(
                 onDismiss = { showDialog = false },
                 onCreate = { title, description, color ->
-                    //agregar a la lista
+                    //guardamos
+                    vm.createProject(title, description, color)
                     showDialog = false
                 }
             )

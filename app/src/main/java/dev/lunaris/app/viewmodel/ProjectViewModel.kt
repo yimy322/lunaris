@@ -1,0 +1,85 @@
+package dev.lunaris.app.viewmodel
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
+import dev.lunaris.app.data.model.Project
+import dev.lunaris.app.data.model.ProjectList
+import dev.lunaris.app.data.repository.ProjectRepository
+import kotlinx.coroutines.launch
+
+class ProjectViewModel(
+    private val repo: ProjectRepository,
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+) : ViewModel() {
+    //aca guardaremos los proyectos que obtendremos
+    var projects by mutableStateOf<List<Project>>(emptyList())
+        private set
+    //para manejar estado y errores
+    var isLoading by mutableStateOf(false)
+    var errorMessage by mutableStateOf<String?>(null)
+        private set
+    var successMessage by mutableStateOf<String?>(null)
+        private set
+    var selectedProject by mutableStateOf<Project?>(null)
+        private set
+    var projectLists: List<ProjectList> by mutableStateOf(emptyList())
+        private set
+    //aca concatena las 2 listas
+    fun loadProjects() {
+        val userId = auth.currentUser?.uid ?: return
+        repo.getUserProjectsRealtime(userId) { list ->
+            projects = projects + list
+            projects = projects.distinctBy { it.id }
+        }
+    }
+
+    //crear proyecto
+    fun createProject(title: String, description: String, color: Color) {
+        viewModelScope.launch {
+            isLoading = true
+            val hex = String.format("#%08X", color.toArgb())
+            //mapeamos al objeto
+            val project = Project(
+                id = "",
+                ownerId = FirebaseAuth.getInstance().currentUser?.uid ?: "",
+                title = title,
+                description = description,
+                colorHex = hex
+            )
+            //guardamos
+            val result = repo.createProject(project)
+            isLoading = false
+            //seteamos mensajes
+            if (result.isSuccess) {
+                successMessage = "Proyecto creado correctamente"
+                loadProjects()//para refrescar de nuevo los proyectos
+            } else {
+                errorMessage = result.exceptionOrNull()?.localizedMessage
+            }
+        }
+    }
+    //para buscar por id
+    fun loadProjectById(id: String) {
+        viewModelScope.launch {
+            val user = auth.currentUser ?: return@launch
+            val result = repo.getProjectById(id)
+            result.onSuccess {
+                selectedProject = it
+                projectLists = repo.getListsByProjectId(id)
+            }.onFailure { e ->
+                errorMessage = e.message
+            }
+        }
+    }
+    //limpiamos mensajes
+    fun clearMessages() {
+        successMessage = null
+        errorMessage = null
+    }
+}

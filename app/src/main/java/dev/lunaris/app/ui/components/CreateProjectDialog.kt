@@ -23,6 +23,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import dev.lunaris.app.ui.theme.ProjectColor1
+import dev.lunaris.app.ui.theme.ProjectColor2
+import dev.lunaris.app.ui.theme.ProjectColor3
+import dev.lunaris.app.ui.theme.ProjectColor4
+import dev.lunaris.app.ui.theme.ProjectColor5
 
 @Composable
 fun CreateProjectDialog(
@@ -33,10 +38,11 @@ fun CreateProjectDialog(
     var description by remember { mutableStateOf("") }
     //sacar colores de la bd
     val colors = listOf(
-        Color(0xFF8FC5FF),
-        Color(0xFFE3B5FF),
-        Color(0xFF74D788),
-        Color(0xFF09ABB5)
+        ProjectColor1,
+        ProjectColor2,
+        ProjectColor3,
+        ProjectColor4,
+        ProjectColor5
     )
     var selectedColor by remember { mutableStateOf(colors[0]) }
     AlertDialog(

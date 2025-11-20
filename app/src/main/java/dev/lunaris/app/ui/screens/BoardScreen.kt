@@ -28,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,18 +42,41 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.toColorInt
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
 import dev.lunaris.app.ui.components.CustomProjectCard
 import dev.lunaris.app.ui.components.CustomTaskCard
 import dev.lunaris.app.ui.theme.ColorPrimary
 import dev.lunaris.app.R
+import dev.lunaris.app.data.repository.ProjectRepository
 import dev.lunaris.app.ui.navigation.Screen
 import dev.lunaris.app.ui.screens.auth.AuthViewModel
 import dev.lunaris.app.ui.theme.DoneColor
+import dev.lunaris.app.utils.toFormattedDate
+import dev.lunaris.app.viewmodel.ProjectViewModel
+import dev.lunaris.app.viewmodel.ProjectViewModelFactory
 
 @Composable
-fun BoardScreen(navController: NavController, vm: AuthViewModel = viewModel()){
+fun BoardScreen(navController: NavController){
+    //para salir de la sesion
+    val authVm: AuthViewModel = viewModel()
+    //crea la instancia del viewmodel
+    val projectVm: ProjectViewModel = viewModel(
+        factory = ProjectViewModelFactory(ProjectRepository())
+    )
+    //es como un init
+    LaunchedEffect(Unit) {
+        projectVm.loadProjects()
+    }
+    val projects = projectVm.projects
+    //info del usuario logueado
+    val user = FirebaseAuth.getInstance().currentUser
+    val email = user?.email
+    val name = user?.displayName
+    //para obtener solo el primer nombre
+    val firstName = name?.trim()?.split(" ")?.firstOrNull() ?: "Usuario"
     //para el drop del usuario
     var expanded by remember { mutableStateOf(false) }
     Scaffold(
@@ -74,7 +98,7 @@ fun BoardScreen(navController: NavController, vm: AuthViewModel = viewModel()){
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.profile_image), // tu imagen
+                        painter = painterResource(id = R.drawable.profile_image),
                         contentDescription = "Foto de perfil",
                         modifier = Modifier
                             .size(32.dp)
@@ -90,7 +114,7 @@ fun BoardScreen(navController: NavController, vm: AuthViewModel = viewModel()){
                             text = { Text("Mi perfil") },
                             onClick = {
                                 expanded = false
-                                // Navegar al perfil o abrir un dialog
+                                //un dialog para mostrar el perfil
                             }
                         )
 
@@ -98,7 +122,7 @@ fun BoardScreen(navController: NavController, vm: AuthViewModel = viewModel()){
                             text = { Text("Ajustes") },
                             onClick = {
                                 expanded = false
-                                // Ir a ajustes
+                                //ir a ajustes
                             }
                         )
 
@@ -107,7 +131,7 @@ fun BoardScreen(navController: NavController, vm: AuthViewModel = viewModel()){
                             onClick = {
                                 expanded = false
                                 //cerramos sesion
-                                vm.signOut()
+                                authVm.signOut()
                                 //redireccionamos al login
                                 navController.navigate(Screen.Login.route) {
                                     //elimina del backstack
@@ -120,7 +144,7 @@ fun BoardScreen(navController: NavController, vm: AuthViewModel = viewModel()){
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Bienvenido, Yimy",
+                        text = "Bienvenido, $firstName",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.ExtraBold,
                         textAlign = TextAlign.Center,
@@ -128,7 +152,7 @@ fun BoardScreen(navController: NavController, vm: AuthViewModel = viewModel()){
                     )
                 }
                 Text(
-                    text = "fh2001@gmail.com",
+                    text = email ?: "",
                     fontSize = 15.sp,
                     textAlign = TextAlign.Center,
                     color = Color.Gray
@@ -156,33 +180,26 @@ fun BoardScreen(navController: NavController, vm: AuthViewModel = viewModel()){
             Spacer(Modifier.height(10.dp))
             //proyectos
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                CustomProjectCard(
-                    title = "Proyecto 1",
-                    date = "NOV 02, 2025",
-                    description = "Mi primer proyecto",
-                    barColor = Color(0xFF8FC5FF),
-                    onClick = {
-                        navController.navigate(Screen.ProjectDetail.route)
+                if (projects.isEmpty()) {
+                    Text(
+                        text = "Aún no tienes proyectos",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(top = 20.dp)
+                    )
+                } else {
+                    //para solo mostrar 3
+                    projects.take(3).forEach { project ->
+                        CustomProjectCard(
+                            title = project.title,
+                            date = project.createdAt.toFormattedDate(),
+                            description = project.description,
+                            barColor = Color(project.colorHex.toColorInt()),
+                            onClick = {
+                                navController.navigate(Screen.ProjectDetail.createRoute(project.id))
+                            }
+                        )
                     }
-                )
-                CustomProjectCard(
-                    title = "Proyecto 2",
-                    date = "NOV 02, 2025",
-                    description = "Mi segundo proyecto",
-                    barColor = Color(0xFFE3B5FF),
-                    onClick = {
-                        navController.navigate(Screen.ProjectDetail.route)
-                    }
-                )
-                CustomProjectCard(
-                    title = "Proyecto 3",
-                    date = "NOV 02, 2025",
-                    description = "Mi tercer proyecto",
-                    barColor = Color(0xFF74D788),
-                    onClick = {
-                        navController.navigate(Screen.ProjectDetail.route)
-                    }
-                )
+                }
                 Button(
                     onClick = { navController.navigate(Screen.Project.route) },
                     modifier = Modifier
