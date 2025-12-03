@@ -1,9 +1,11 @@
 package dev.lunaris.app.data.repository
 
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import dev.lunaris.app.data.model.Project
 import dev.lunaris.app.data.model.ProjectList
 import dev.lunaris.app.data.model.Task
+import dev.lunaris.app.data.model.User
 import kotlinx.coroutines.tasks.await
 
 class ProjectRepository {
@@ -13,6 +15,7 @@ class ProjectRepository {
     //para las listas
     private val listsRef = FirebaseFirestore.getInstance().collection("projectLists")
     private val tasksRef = FirebaseFirestore.getInstance().collection("tasks")
+    private val usersRef = FirebaseFirestore.getInstance().collection("users")
     //crea un proyecto, suspende y espera a que termine
     suspend fun createProject(project: Project): Result<String> {
         return try {
@@ -139,9 +142,62 @@ class ProjectRepository {
             Result.failure(e)
         }
     }
+    //cambiar estado de la tarea
+    suspend fun updateTaskState(listId: String, taskId: String, isDone: Boolean): Result<Unit> {
+        return try {
+            tasksRef.document(taskId)
+                .update("done", isDone)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
     // Obtener tareas por listId
     suspend fun getTasksByListId(listId: String): List<Task> {
         val snapshot = tasksRef.whereEqualTo("listId", listId).get().await()
         return snapshot.toObjects(Task::class.java)
     }
+    //agregar colaborador a un proyecto
+    suspend fun addCollaborator(projectId: String, collaboratorId: String): Result<Unit> {
+        return try {
+            projectsRef.document(projectId)
+                .update("collaborators", FieldValue.arrayUnion(collaboratorId))
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    //buscar usuarios
+    fun searchUsersByEmailPrefix(prefix: String, onResult: (List<User>) -> Unit) {
+        if (prefix.isBlank()) {
+            onResult(emptyList())
+            return
+        }
+        usersRef
+            .orderBy("email")
+            .startAt(prefix)
+            .endAt(prefix + "\uf8ff")
+            .addSnapshotListener { snap, err ->
+                if (err != null) return@addSnapshotListener
+                val users = snap?.toObjects(User::class.java) ?: emptyList()
+                onResult(users)
+            }
+    }
+    //buscar usuario
+    suspend fun getUserById(uid: String): User? {
+        return try {
+            val doc = FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(uid)
+                .get()
+                .await()
+            doc.toObject(User::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
 }

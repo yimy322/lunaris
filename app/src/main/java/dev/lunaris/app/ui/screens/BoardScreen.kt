@@ -123,14 +123,6 @@ fun BoardScreen(navController: NavController){
                         )
 
                         DropdownMenuItem(
-                            text = { Text("Ajustes") },
-                            onClick = {
-                                expanded = false
-                                //ir a ajustes
-                            }
-                        )
-
-                        DropdownMenuItem(
                             text = { Text("Cerrar sesión", color = Color.Red) },
                             onClick = {
                                 expanded = false

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -39,7 +40,8 @@ fun CustomTaskCard(
     listName: String,
     date: String,
     iconColor: Color,
-    imageVector: ImageVector
+    imageVector: ImageVector,
+    onToggleState: (() -> Unit)? = null
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -56,16 +58,18 @@ fun CustomTaskCard(
                     color = Color(0xFF6E6E6E),
                     fontWeight = FontWeight.Bold
                 )
-
-                Icon(
-                    imageVector = imageVector,
-                    contentDescription = "Agregar tarea",
-                    tint = iconColor,
-                    modifier = Modifier.size(20.dp)
-                )
+                IconButton(
+                    onClick = { onToggleState?.invoke() },
+                ) {
+                    Icon(
+                        imageVector = imageVector,
+                        contentDescription = "Agregar tarea",
+                        tint = iconColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
             Text(description, fontSize = 12.sp, color = Color.Gray)
 
             //nombre de la lista

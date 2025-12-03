@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddCircle
@@ -34,7 +35,10 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
 import dev.lunaris.app.data.repository.ProjectRepository
+import dev.lunaris.app.ui.components.AddCollaboratorDialog
+import dev.lunaris.app.ui.components.CollaboratorItem
 import dev.lunaris.app.ui.components.CreateListDialog
 import dev.lunaris.app.ui.components.CreateTaskDialog
 import dev.lunaris.app.ui.components.CustomTaskCard
@@ -82,6 +86,10 @@ fun ProjectDetailScreen(navController: NavController, projectId: String){
     val lists = viewModel.projectLists
     //estado del dialog
     var showListDialog by remember { mutableStateOf(false) }
+    var showAddCollaboratorDialog by remember { mutableStateOf(false) }
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+    val isOwner = currentUserId == project.ownerId
+    val collaboratorUsers = viewModel.collaboratorUsers
     Scaffold(modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
@@ -96,110 +104,168 @@ fun ProjectDetailScreen(navController: NavController, projectId: String){
                     }
                 },
                 actions = {
-                    TextButton(onClick = { showListDialog = true }) {
-                        Text("+ Lista")
+                    if (isOwner) {
+                        TextButton(onClick = { showListDialog = true }) {
+                            Text("+ Lista")
+                        }
+                        TextButton(onClick = { showAddCollaboratorDialog = true }) {
+                            Text("+ Colaborador")
+                        }
                     }
                 }
             )
         })
     { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
             //detalle del proyecto
-            ProjectInfoSection(
-                project.title,
-                project.description,
-                Color(project.colorHex.toColorInt()),
-                "Creado el: ${project.createdAt.toFormattedDate()}")
-
-            Spacer(Modifier.height(24.dp))
-
-            //listas del proyecto
-            Text(
-                "Listas del proyecto:",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(Modifier.height(12.dp))
-            if (lists.isEmpty()) {
-                Text(
-                    text = "Este proyecto aún no tiene listas",
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(top = 20.dp)
+            item {
+                ProjectInfoSection(
+                    project.title,
+                    project.description,
+                    Color(project.colorHex.toColorInt()),
+                    "Creado el: ${project.createdAt.toFormattedDate()}"
                 )
-            }else{
-                lists.forEach { list ->
-                    //titulo de la lista
-                    ProjectListItem(list.title)
-                    Spacer(Modifier.height(8.dp))
-
-                    //button para crear la tarea dentro de la lista
-                    TextButton(onClick = {
-                        showTaskDialogForList = list.id
-                    }) {
-                        Icon(Icons.Default.AddCircle, contentDescription = null, tint = DoneColor)
-                        Text("Agregar tarea", color = DoneColor)
+            }
+            item {
+                Text(
+                    "Colaboradores del proyecto:",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 10.dp, bottom = 5.dp)
+                )
+            }
+            item {
+                if (collaboratorUsers.isEmpty()) {
+                    Text(
+                        text = "Este proyecto aún no tiene colaboradores",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }else{
+                    collaboratorUsers.forEach { user ->
+                        CollaboratorItem(
+                            name = user.name,
+                            email = user.email,
+                            photoUrl = user.photoUrl
+                        )
                     }
+                }
+            }
+            //listas del proyecto
+            item {
+                Text(
+                    "Listas del proyecto:",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 10.dp)
+                )
+            }
+            //Spacer(Modifier.height(12.dp))
+            item {
+                if (lists.isEmpty()) {
+                    Text(
+                        text = "Este proyecto aún no tiene listas",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(top = 10.dp, bottom = 18.dp)
+                    )
+                }else{
+                    lists.forEach { list ->
+                        //titulo de la lista
+                        ProjectListItem(list.title)
+                        Spacer(Modifier.height(8.dp))
 
-                    Spacer(Modifier.height(8.dp))
-
-                    //obtenemos las tareas de la lista
-                    val tasks = viewModel.tasksByList[list.id] ?: emptyList()
-
-                    if (tasks.isEmpty()) {
-                        Text("No hay tareas en esta lista aún.", fontSize = 13.sp, color = Color.Gray)
-                    } else {
-                        //mostramos tareas en caso haya
-                        tasks.forEach { task ->
-                            CustomTaskCard(
-                                title = task.title,
-                                description = task.description,
-                                projectName = project.title,
-                                listName = list.title,
-                                date = "Creado el: ${task.createdAt.toFormattedDate()}",
-                                iconColor = ColorSecondary,
-                                imageVector = Icons.Default.CheckCircle
-                            )
-
-                            Spacer(Modifier.height(12.dp))
+                        //button para crear la tarea dentro de la lista
+                        TextButton(onClick = {
+                            showTaskDialogForList = list.id
+                        }) {
+                            Icon(Icons.Default.AddCircle, contentDescription = null, tint = DoneColor)
+                            Text("Agregar tarea", color = DoneColor)
                         }
+
+                        Spacer(Modifier.height(8.dp))
+
+                        //obtenemos las tareas de la lista
+                        val tasks = viewModel.tasksByList[list.id] ?: emptyList()
+
+                        if (tasks.isEmpty()) {
+                            Text("No hay tareas en esta lista aún.", fontSize = 13.sp, color = Color.Gray)
+                        } else {
+                            //mostramos tareas en caso haya
+                            tasks.forEach { task ->
+                                val statusText = if (task.done) "Completada" else "Pendiente"
+                                val statusColor = if (task.done)
+                                    DoneColor
+                                else
+                                    ColorSecondary
+                                CustomTaskCard(
+                                    title = task.title,
+                                    description = task.description,
+                                    projectName = statusText,
+                                    listName = list.title,
+                                    date = "Fecha limite: ${task.deadline?.toFormattedDate()}",
+                                    iconColor = statusColor,
+                                    imageVector = Icons.Default.CheckCircle,
+                                    onToggleState = {
+                                        viewModel.toggleTaskState(
+                                            listId = list.id,
+                                            taskId = task.id,
+                                            newState = !task.done
+                                        )
+                                    }
+                                )
+
+                                Spacer(Modifier.height(12.dp))
+                            }
+                        }
+                        Spacer(Modifier.height(24.dp))
                     }
-                    Spacer(Modifier.height(24.dp))
                 }
             }
             //dialogo
-            if (showListDialog) {
-                CreateListDialog(
-                    onDismiss = { showListDialog = false },
-                    onCreate = { title ->
-                        if (title.isNotBlank()) {
-                            viewModel.createList(projectId, title)
+            item {
+                if (showListDialog) {
+                    CreateListDialog(
+                        onDismiss = { showListDialog = false },
+                        onCreate = { title ->
+                            if (title.isNotBlank()) {
+                                viewModel.createList(projectId, title)
+                            }
+                            showListDialog = false
                         }
-                        showListDialog = false
-                    }
-                )
+                    )
+                }
             }
-            //para el dialogo de crear tareas
-            if (showTaskDialogForList != null) {
-                CreateTaskDialog(
-                    onDismiss = { showTaskDialogForList = null },
-                    onCreate = { title, description, deadline ->
-                        viewModel.createTask(
-                            listId = showTaskDialogForList!!,
-                            title = title,
-                            description = description,
-                            deadline = deadline
-                        )
-                        showTaskDialogForList = null
-                    }
-                )
+            item {
+                //para el dialogo de crear tareas
+                if (showTaskDialogForList != null) {
+                    CreateTaskDialog(
+                        onDismiss = { showTaskDialogForList = null },
+                        onCreate = { title, description, deadline ->
+                            viewModel.createTask(
+                                listId = showTaskDialogForList!!,
+                                title = title,
+                                description = description,
+                                deadline = deadline
+                            )
+                            showTaskDialogForList = null
+                        }
+                    )
+                }
             }
-
+            //dialog para agregar colab
+            item {
+                if (showAddCollaboratorDialog) {
+                    AddCollaboratorDialog(
+                        viewModel = viewModel,
+                        projectId = projectId,
+                        onDismiss = { showAddCollaboratorDialog = false }
+                    )
+                }
+            }
         }
     }
 }

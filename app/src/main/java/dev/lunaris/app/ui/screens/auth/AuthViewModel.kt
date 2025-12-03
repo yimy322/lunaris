@@ -11,6 +11,8 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.userProfileChangeRequest
+import com.google.firebase.firestore.FirebaseFirestore
+import dev.lunaris.app.data.model.User
 
 class AuthViewModel : ViewModel() {
     //conexion
@@ -38,11 +40,27 @@ class AuthViewModel : ViewModel() {
                     }
                     user?.updateProfile(profileUpdates)
                         ?.addOnCompleteListener {
-                            //cerramos sesion
-                            auth.signOut()
-                            currentUser = null
-                            isLoading = false
-                            onResult(true)
+                            //guardar en Firestore
+                            val userData = User(
+                                id = user.uid,
+                                email = email,
+                                name = name,
+                                photoUrl = user.photoUrl?.toString()
+                            )
+                            FirebaseFirestore.getInstance()
+                                .collection("users")
+                                .document(user.uid)
+                                .set(userData)
+                                .addOnSuccessListener {
+                                    auth.signOut()
+                                    currentUser = null
+                                    isLoading = false
+                                    onResult(true)
+                                }
+                                .addOnFailureListener {
+                                    errorMessage = "Error al guardar usuario en Firestore"
+                                    onResult(false)
+                                }
                         }
                 } else {
                     isLoading = false
