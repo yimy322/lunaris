@@ -7,6 +7,7 @@ data class Task(
     val listId: String = "",
     val title: String = "",
     val description: String = "",
+    val assignedTo: String = "",
     val done: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val deadline: Long? = null

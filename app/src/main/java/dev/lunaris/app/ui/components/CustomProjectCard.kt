@@ -62,12 +62,6 @@ fun CustomProjectCard(
                         Text(date, fontSize = 12.sp, color = Color.Gray)
                     }
                 }
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFFF7090))
-                )
             }
             Spacer(modifier = Modifier.height(12.dp))
             Box(

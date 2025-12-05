@@ -1,8 +1,10 @@
 package dev.lunaris.app.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -101,26 +103,33 @@ fun BoardScreen(navController: NavController){
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.profile_image),
-                        contentDescription = "Foto de perfil",
+                    Box(
                         modifier = Modifier
                             .size(32.dp)
                             .clip(CircleShape)
-                            .clickable { expanded = true }
-                    )
+                            .background(Color.LightGray)
+                            .clickable { expanded = true },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = firstName.firstOrNull()?.uppercase() ?: "U",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                    }
                     DropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false }
                     ) {
 
-                        DropdownMenuItem(
-                            text = { Text("Mi perfil") },
-                            onClick = {
-                                expanded = false
-                                //un dialog para mostrar el perfil
-                            }
-                        )
+//                        DropdownMenuItem(
+//                            text = { Text("Mi perfil") },
+//                            onClick = {
+//                                expanded = false
+//                                //un dialog para mostrar el perfil
+//                            }
+//                        )
 
                         DropdownMenuItem(
                             text = { Text("Cerrar sesión", color = Color.Red) },

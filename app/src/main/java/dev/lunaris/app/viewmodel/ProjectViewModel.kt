@@ -39,6 +39,8 @@ class ProjectViewModel(
         private set
     var collaboratorUsers by mutableStateOf<List<User>>(emptyList())
         private set
+    var ownerUser by mutableStateOf<User?>(null)
+        private set
     //aca concatena las 2 listas
     fun loadProjects() {
         val userId = auth.currentUser?.uid ?: return
@@ -91,6 +93,7 @@ class ProjectViewModel(
                 collaboratorUsers = project.collaborators.mapNotNull { uid ->
                     repo.getUserById(uid)
                 }
+                ownerUser = repo.getUserById(project.ownerId)
             }.onFailure { e ->
                 errorMessage = e.message
             }
@@ -123,7 +126,8 @@ class ProjectViewModel(
         listId: String,
         title: String,
         description: String,
-        deadline: Long?
+        deadline: Long?,
+        assignedTo: String
     ) {
         viewModelScope.launch {
             val user = auth.currentUser ?: return@launch
@@ -131,6 +135,7 @@ class ProjectViewModel(
                 listId = listId,
                 title = title,
                 description = description,
+                assignedTo = assignedTo,
                 deadline = deadline,
                 done = false,
                 createdAt = System.currentTimeMillis()

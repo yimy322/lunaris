@@ -90,6 +90,7 @@ fun ProjectDetailScreen(navController: NavController, projectId: String){
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
     val isOwner = currentUserId == project.ownerId
     val collaboratorUsers = viewModel.collaboratorUsers
+    val assignableUsers = listOfNotNull(viewModel.ownerUser) + viewModel.collaboratorUsers
     Scaffold(modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
@@ -201,14 +202,20 @@ fun ProjectDetailScreen(navController: NavController, projectId: String){
                                     DoneColor
                                 else
                                     ColorSecondary
+                                val assignedUser = viewModel.ownerUser?.takeIf { it.id == task.assignedTo }
+                                    ?: viewModel.collaboratorUsers.firstOrNull { it.id == task.assignedTo }
+                                val canToggle = !task.done && task.assignedTo == currentUserId
                                 CustomTaskCard(
                                     title = task.title,
                                     description = task.description,
                                     projectName = statusText,
                                     listName = list.title,
                                     date = "Fecha limite: ${task.deadline?.toFormattedDate()}",
+                                    assignedUserName = assignedUser?.name ?: "Sin asignar",
+                                    assignedUserEmail = assignedUser?.email ?: "",
                                     iconColor = statusColor,
                                     imageVector = Icons.Default.CheckCircle,
+                                    canToggle = canToggle,
                                     onToggleState = {
                                         viewModel.toggleTaskState(
                                             listId = list.id,
@@ -243,13 +250,15 @@ fun ProjectDetailScreen(navController: NavController, projectId: String){
                 //para el dialogo de crear tareas
                 if (showTaskDialogForList != null) {
                     CreateTaskDialog(
+                        collaborators = assignableUsers,
                         onDismiss = { showTaskDialogForList = null },
-                        onCreate = { title, description, deadline ->
+                        onCreate = { title, description, deadline, assignedTo ->
                             viewModel.createTask(
                                 listId = showTaskDialogForList!!,
                                 title = title,
                                 description = description,
-                                deadline = deadline
+                                deadline = deadline,
+                                assignedTo = assignedTo
                             )
                             showTaskDialogForList = null
                         }
